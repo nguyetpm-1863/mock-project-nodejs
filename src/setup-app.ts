@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import type { Application } from 'express';
 import helmet from 'helmet';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter.js';
 import type { AppConfig } from './config/configuration.js';
@@ -19,6 +20,10 @@ const flattenErrors = (errors: ValidationError[]): string[] =>
 export function setupApp(app: INestApplication): AppConfig {
   const config = app.get(ConfigService).getOrThrow<AppConfig>('app');
 
+  if (config.trustProxyHops > 0) {
+    const server: Application = app.getHttpAdapter().getInstance();
+    server.set('trust proxy', config.trustProxyHops);
+  }
   app.use(helmet());
   app.enableCors({ origin: config.corsOrigin });
   app.setGlobalPrefix(config.apiPrefix);
