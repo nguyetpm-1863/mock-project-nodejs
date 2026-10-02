@@ -16,6 +16,12 @@ export const envValidationSchema = Joi.object({
   API_PREFIX: Joi.string().default('api'),
   CORS_ORIGIN: Joi.string().default('*'),
   SWAGGER_ENABLED: Joi.boolean().default(true),
+  DB_HOST: Joi.string().default('localhost'),
+  DB_PORT: Joi.number().port().default(5432),
+  DB_USERNAME: Joi.string().required(),
+  DB_PASSWORD: Joi.string().allow('').default(''),
+  DB_DATABASE: Joi.string().required(),
+  DB_LOGGING: Joi.boolean().default(false),
 });
 
 export default (): { app: AppConfig } => ({

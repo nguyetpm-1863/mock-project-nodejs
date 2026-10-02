@@ -20,7 +20,10 @@
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
     "lint:changed": "sunlint --all --changed-files",
-    "lint:security": "sunlint --security --input=src"
+    "lint:security": "sunlint --security --input=src",
+    "migration:generate": "npm run build && typeorm -d dist/database/data-source.js migration:generate",
+    "migration:run": "npm run build && typeorm -d dist/database/data-source.js migration:run",
+    "migration:revert": "npm run build && typeorm -d dist/database/data-source.js migration:revert"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",
@@ -28,12 +31,15 @@
     "@nestjs/core": "^12.0.1",
     "@nestjs/platform-express": "^12.0.1",
     "@nestjs/swagger": "^12.0.2",
+    "@nestjs/typeorm": "^12.0.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "helmet": "^8.3.0",
     "joi": "^18.2.9",
+    "pg": "^8.23.1",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "typeorm": "^1.1.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^12.0.0",
@@ -43,6 +49,7 @@
     "@sun-asterisk/sunlint": "^1.3.56",
     "@types/express": "^5.0.0",
     "@types/node": "^24.0.0",
+    "@types/pg": "^8.23.1",
     "@types/supertest": "^7.0.0",
     "@vitest/coverage-v8": "^4.1.2",
     "prettier": "^3.4.2",
