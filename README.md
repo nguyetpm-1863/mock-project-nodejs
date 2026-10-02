@@ -20,6 +20,14 @@ npm run start:dev
 
 Skip `docker compose up -d` if you already have a local PostgreSQL, and set the `DB_*` values in `.env`.
 
+Set `JWT_SECRET` in `.env` before starting (at least 32 characters), for example with `openssl rand -hex 32`. The app refuses to start while it is empty.
+
+| Variable | Description |
+| --- | --- |
+| `JWT_SECRET` | Secret used to sign tokens (required, min 32 chars) |
+| `JWT_EXPIRES_IN` | Token lifetime in seconds (default 604800) |
+| `TRUST_PROXY_HOPS` | Number of reverse proxies in front of the app, so rate limiting uses the client IP (default 0) |
+
 - API: http://localhost:3000/api
 - Swagger docs: http://localhost:3000/api/docs
 
@@ -38,7 +46,11 @@ Skip `docker compose up -d` if you already have a local PostgreSQL, and set the 
 | `npm run lint:security` | SunLint security rules |
 | `npm run format` | Format with prettier |
 | `npm test` | Unit tests (vitest) |
-| `npm run test:e2e` | End-to-end tests |
+| `npm run test:e2e` | End-to-end tests against the `*_test` database from `.env.test` |
+
+## Tests
+
+`npm run test:e2e` loads `.env.test` on top of `.env`, creates the test database if missing and runs all migrations before the suite. It refuses to run unless `DB_DATABASE` ends with `_test`, so the development database is never touched.
 
 ## Project structure
 
