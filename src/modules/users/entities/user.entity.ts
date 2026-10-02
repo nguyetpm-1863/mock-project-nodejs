@@ -1,4 +1,5 @@
 import {
+  Check,
   Column,
   CreateDateColumn,
   Entity,
@@ -11,25 +12,36 @@ import {
 } from 'typeorm';
 import { Article } from '../../articles/entities/article.entity.js';
 import { Comment } from '../../comments/entities/comment.entity.js';
+import {
+  USER_EMAIL_MAX_LENGTH,
+  USER_IMAGE_MAX_LENGTH,
+  USER_PASSWORD_HASH_MAX_LENGTH,
+  USERNAME_MAX_LENGTH,
+} from '../constants/user.constants.js';
 
 @Entity('users')
+@Check('CHK_users_email_lowercase', `"email" = LOWER("email")`)
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'varchar', length: 255, unique: true })
+  @Column({ type: 'varchar', length: USER_EMAIL_MAX_LENGTH, unique: true })
   email: string;
 
-  @Column({ type: 'varchar', length: 100, unique: true })
+  @Column({ type: 'varchar', length: USERNAME_MAX_LENGTH, unique: true })
   username: string;
 
-  @Column({ type: 'varchar', length: 255, select: false })
+  @Column({
+    type: 'varchar',
+    length: USER_PASSWORD_HASH_MAX_LENGTH,
+    select: false,
+  })
   password: string;
 
   @Column({ type: 'text', nullable: true })
   bio: string | null;
 
-  @Column({ type: 'varchar', length: 500, nullable: true })
+  @Column({ type: 'varchar', length: USER_IMAGE_MAX_LENGTH, nullable: true })
   image: string | null;
 
   @OneToMany(() => Article, (article) => article.author)

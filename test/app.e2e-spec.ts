@@ -29,7 +29,7 @@ describe('App (e2e)', () => {
     return request(app.getHttpServer())
       .get('/api/not-found')
       .expect(404)
-      .expect((res) => expect(res.body.errors.body).toHaveLength(1));
+      .expect((res) => expect(res.body.errors.resource).toHaveLength(1));
   });
 
   afterEach(async () => {
