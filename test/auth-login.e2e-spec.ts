@@ -68,8 +68,12 @@ describe('POST /api/users/login (e2e)', () => {
     expect(res.body.user).toMatchObject({ email, username, bio: null });
     const payload = await app
       .get(JwtService)
-      .verifyAsync<{ username: string }>(res.body.user.token);
-    expect(payload.username).toBe(username);
+      .verifyAsync<Record<string, unknown>>(res.body.user.token);
+    expect(payload).toMatchObject({
+      sub: expect.any(Number),
+      jti: expect.any(String),
+    });
+    expect(payload).not.toHaveProperty('username');
   });
 
   it('accepts email with different case and surrounding spaces', () => {

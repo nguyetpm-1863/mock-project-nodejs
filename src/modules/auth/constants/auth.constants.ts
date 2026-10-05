@@ -9,6 +9,7 @@ export const JWT_SECRET_MIN_LENGTH = 32;
 export const DEFAULT_JWT_EXPIRES_IN_SECONDS = 604_800;
 export const CREDENTIALS_ERROR_FIELD = 'credentials';
 export const TOKEN_ERROR_FIELD = 'token';
+export const UPDATE_USER_ERROR_FIELD = 'user';
 export const AUTH_SCHEME = 'Token';
 export const TOKEN_DENYLIST_KEY_PREFIX = 'auth:denylist:';
 export const TOKEN_DENYLIST_VALUE = '1';
