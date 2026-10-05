@@ -23,6 +23,10 @@ export const envValidationSchema = Joi.object({
   CORS_ORIGIN: Joi.string().default('*'),
   SWAGGER_ENABLED: Joi.boolean().default(true),
   TRUST_PROXY_HOPS: Joi.number().integer().min(0).default(0),
+  REDIS_HOST: Joi.string().default('localhost'),
+  REDIS_PORT: Joi.number().port().default(6379),
+  REDIS_DB: Joi.number().integer().min(0).default(0),
+  REDIS_KEY_PREFIX: Joi.string().default('medium-clone:'),
   AUTH_RATE_LIMIT: Joi.number()
     .integer()
     .positive()

@@ -5,6 +5,8 @@ import type { AuthConfig } from '../../config/auth.config.js';
 import { UsersModule } from '../users/users.module.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
+import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
+import { TokenDenylistService } from './token-denylist.service.js';
 
 @Module({
   imports: [
@@ -18,6 +20,6 @@ import { AuthService } from './auth.service.js';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthService, TokenDenylistService, JwtAuthGuard],
 })
 export class AuthModule {}

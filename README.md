@@ -18,7 +18,7 @@ npm run migration:run
 npm run start:dev
 ```
 
-Skip `docker compose up -d` if you already have a local PostgreSQL, and set the `DB_*` values in `.env`.
+`docker compose up -d` starts PostgreSQL and Redis. Skip it if you already run them locally, and set the `DB_*` / `REDIS_*` values in `.env`.
 
 Set `JWT_SECRET` in `.env` before starting (at least 32 characters), for example with `openssl rand -hex 32`. The app refuses to start while it is empty.
 
@@ -26,6 +26,8 @@ Set `JWT_SECRET` in `.env` before starting (at least 32 characters), for example
 | --- | --- |
 | `JWT_SECRET` | Secret used to sign tokens (required, min 32 chars) |
 | `JWT_EXPIRES_IN` | Token lifetime in seconds (default 604800) |
+| `REDIS_HOST`, `REDIS_PORT`, `REDIS_DB` | Redis connection used to store logged-out tokens |
+| `REDIS_KEY_PREFIX` | Prefix for every Redis key (default `medium-clone:`), so a shared Redis is safe |
 | `AUTH_RATE_LIMIT` | Max login/signup requests per minute per client (default 5; raise it when running the RealWorld API test suite) |
 | `TRUST_PROXY_HOPS` | Number of reverse proxies in front of the app, so rate limiting uses the client IP (default 0) |
 
@@ -63,6 +65,7 @@ src/
 ├── config/           # Env config + Joi validation
 ├── common/filters/   # Errors as { "errors": { "body": [...] } }
 ├── database/         # TypeORM module, CLI data source, migrations
+├── redis/            # Shared Redis client
 └── modules/          # Feature modules with their entities
 test/                 # e2e tests
 ```
