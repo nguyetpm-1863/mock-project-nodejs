@@ -13,6 +13,7 @@ import {
 import { Article } from '../../articles/entities/article.entity.js';
 import { Comment } from '../../comments/entities/comment.entity.js';
 import {
+  PASSWORD_CHANGED_JTI_MAX_LENGTH,
   USER_EMAIL_MAX_LENGTH,
   USER_IMAGE_MAX_LENGTH,
   USER_PASSWORD_HASH_MAX_LENGTH,
@@ -43,6 +44,17 @@ export class User {
 
   @Column({ type: 'varchar', length: USER_IMAGE_MAX_LENGTH, nullable: true })
   image: string | null;
+
+  @Column({ name: 'password_changed_at', type: 'timestamptz', nullable: true })
+  passwordChangedAt: Date | null;
+
+  @Column({
+    name: 'password_changed_jti',
+    type: 'varchar',
+    length: PASSWORD_CHANGED_JTI_MAX_LENGTH,
+    nullable: true,
+  })
+  passwordChangedJti: string | null;
 
   @OneToMany(() => Article, (article) => article.author)
   articles: Relation<Article[]>;

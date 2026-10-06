@@ -1,6 +1,6 @@
 import type { Request } from 'express';
-import type { JwtPayload } from './jwt-payload.interface.js';
+import type { AuthContext } from './auth-context.interface.js';
 
 export interface AuthenticatedRequest extends Request {
-  auth: JwtPayload;
+  auth: AuthContext;
 }

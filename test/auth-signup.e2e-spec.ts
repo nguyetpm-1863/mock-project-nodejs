@@ -63,8 +63,12 @@ describe('POST /api/users (e2e)', () => {
     });
     const payload = await app
       .get(JwtService)
-      .verifyAsync<{ username: string }>(res.body.user.token);
-    expect(payload.username).toBe(user.username);
+      .verifyAsync<Record<string, unknown>>(res.body.user.token);
+    expect(payload).toMatchObject({
+      sub: expect.any(Number),
+      jti: expect.any(String),
+    });
+    expect(payload).not.toHaveProperty('username');
   });
 
   it('stores a normalized email and a hashed password', async () => {
