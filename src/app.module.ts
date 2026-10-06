@@ -12,6 +12,7 @@ import configuration, { envValidationSchema } from './config/configuration.js';
 import databaseConfig from './config/database.config.js';
 import redisConfig from './config/redis.config.js';
 import { DatabaseModule } from './database/database.module.js';
+import { ArticlesModule } from './modules/articles/articles.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { RedisModule } from './redis/redis.module.js';
@@ -35,6 +36,7 @@ import { RedisModule } from './redis/redis.module.js';
     RedisModule,
     HealthModule,
     AuthModule,
+    ArticlesModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

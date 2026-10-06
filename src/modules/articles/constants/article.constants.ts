@@ -1,0 +1,10 @@
+export const ARTICLE_ERROR_FIELD = 'article';
+export const NOT_FOUND_MESSAGE = 'not found';
+export const FORBIDDEN_MESSAGE = 'forbidden';
+export const ARTICLE_TITLE_MAX_LENGTH = 255;
+export const ARTICLE_DESCRIPTION_MAX_LENGTH = 500;
+export const ARTICLE_BODY_MAX_LENGTH = 50_000;
+export const TAG_LIST_MAX_SIZE = 20;
+export const SLUG_BASE_MAX_LENGTH = 200;
+export const SLUG_SUFFIX_BYTES = 4;
+export const SLUG_FALLBACK_BASE = 'article';

@@ -6,6 +6,7 @@ import { UsersModule } from '../users/users.module.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
+import { OptionalJwtAuthGuard } from './guards/optional-jwt-auth.guard.js';
 import { TokenDenylistService } from './token-denylist.service.js';
 
 @Module({
@@ -20,6 +21,18 @@ import { TokenDenylistService } from './token-denylist.service.js';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, TokenDenylistService, JwtAuthGuard],
+  providers: [
+    AuthService,
+    TokenDenylistService,
+    JwtAuthGuard,
+    OptionalJwtAuthGuard,
+  ],
+  exports: [
+    JwtModule,
+    TokenDenylistService,
+    JwtAuthGuard,
+    OptionalJwtAuthGuard,
+    UsersModule,
+  ],
 })
 export class AuthModule {}
