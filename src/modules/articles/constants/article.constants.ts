@@ -8,3 +8,5 @@ export const TAG_LIST_MAX_SIZE = 20;
 export const SLUG_BASE_MAX_LENGTH = 200;
 export const SLUG_SUFFIX_BYTES = 4;
 export const SLUG_FALLBACK_BASE = 'article';
+export const DEFAULT_PAGE_LIMIT = 20;
+export const MAX_PAGE_LIMIT = 100;

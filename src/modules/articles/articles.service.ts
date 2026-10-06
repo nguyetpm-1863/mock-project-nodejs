@@ -18,9 +18,15 @@ import {
 } from './constants/article.constants.js';
 import type { SingleArticleResponseDto } from './dto/article-response.dto.js';
 import type { CreateArticleFieldsDto } from './dto/create-article.dto.js';
+import type {
+  ListArticlesQueryDto,
+  PaginationQueryDto,
+} from './dto/list-articles-query.dto.js';
+import type { MultipleArticlesResponseDto } from './dto/multiple-articles-response.dto.js';
 import type { UpdateArticleFieldsDto } from './dto/update-article.dto.js';
 import type { Article } from './entities/article.entity.js';
 import type { ArticleChanges } from './interfaces/article-changes.interface.js';
+import type { ArticleFilters } from './interfaces/article-filters.interface.js';
 import { generateSlug } from './utils/slugify.js';
 
 @Injectable()
@@ -52,6 +58,32 @@ export class ArticlesService {
       );
     });
     return this.findBySlug(slug, authorId);
+  }
+
+  list(
+    query: ListArticlesQueryDto,
+    viewerId: number | null,
+  ): Promise<MultipleArticlesResponseDto> {
+    return this.findPage(
+      {
+        tag: query.tag,
+        author: query.author,
+        favorited: query.favorited,
+        limit: query.limit,
+        offset: query.offset,
+      },
+      viewerId,
+    );
+  }
+
+  feed(
+    query: PaginationQueryDto,
+    viewerId: number,
+  ): Promise<MultipleArticlesResponseDto> {
+    return this.findPage(
+      { followedBy: viewerId, limit: query.limit, offset: query.offset },
+      viewerId,
+    );
   }
 
   async findBySlug(
@@ -119,6 +151,49 @@ export class ArticlesService {
       await this.articlesRepository.deleteById(article.id, manager);
       await this.tagsRepository.deleteUnusedByIds(tagIds, manager);
     });
+  }
+
+  private async findPage(
+    filters: ArticleFilters,
+    viewerId: number | null,
+  ): Promise<MultipleArticlesResponseDto> {
+    const [articles, articlesCount] =
+      await this.articlesRepository.findPage(filters);
+    if (articles.length === 0) {
+      return { articles: [], articlesCount };
+    }
+
+    const articleIds = articles.map((article) => article.id);
+    const authorIds = articles.map((article) => article.author.id);
+    const [favoritesCounts, favoritedIds, followedIds] = await Promise.all([
+      this.articlesRepository.countFavoritesByArticleIds(articleIds),
+      viewerId === null
+        ? new Set<number>()
+        : this.articlesRepository.findFavoritedArticleIds(viewerId, articleIds),
+      viewerId === null
+        ? new Set<number>()
+        : this.followsRepository.findFollowedIds(viewerId, authorIds),
+    ]);
+
+    return {
+      articles: articles.map((article) => ({
+        slug: article.slug,
+        title: article.title,
+        description: article.description,
+        tagList: article.tags.map((tag) => tag.name).sort(),
+        createdAt: article.createdAt,
+        updatedAt: article.updatedAt,
+        favorited: favoritedIds.has(article.id),
+        favoritesCount: favoritesCounts.get(article.id) ?? 0,
+        author: {
+          username: article.author.username,
+          bio: article.author.bio,
+          image: article.author.image,
+          following: followedIds.has(article.author.id),
+        },
+      })),
+      articlesCount,
+    };
   }
 
   private async findArticle(slug: string): Promise<Article> {

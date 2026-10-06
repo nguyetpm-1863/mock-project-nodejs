@@ -17,4 +17,15 @@ export class FollowsRepository {
     );
     return rows.length > 0;
   }
+
+  async findFollowedIds(
+    followerId: number,
+    userIds: number[],
+  ): Promise<Set<number>> {
+    const rows: { following_id: number }[] = await this.repository.query(
+      'SELECT following_id FROM user_follows WHERE follower_id = $1 AND following_id = ANY($2)',
+      [followerId, userIds],
+    );
+    return new Set(rows.map((row) => row.following_id));
+  }
 }
