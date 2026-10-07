@@ -112,4 +112,19 @@ describe('ArticlesService', () => {
     expect(articlesRepository.deleteById).toHaveBeenCalledWith(10);
     expect(tagsRepository.deleteUnusedByIds).toHaveBeenCalledWith([7]);
   });
+
+  it.each([
+    ['update', () => service.update('my-article', 1, { tagList: ['new'] })],
+    ['remove', () => service.remove('my-article', 1)],
+  ])(
+    'still succeeds when cleaning up unused tags fails on %s',
+    async (_name, call) => {
+      tagsRepository.deleteUnusedByIds.mockRejectedValueOnce(
+        new Error('connection lost'),
+      );
+
+      await expect(call()).resolves.not.toThrow();
+      expect(tagsRepository.deleteUnusedByIds).toHaveBeenCalledWith([7]);
+    },
+  );
 });

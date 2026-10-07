@@ -1,6 +1,7 @@
 import {
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
@@ -90,7 +91,7 @@ export class ArticlesService {
         id: article.id,
         tags: await this.findOrCreateTags(dto.tagList),
       });
-      await this.tagsRepository.deleteUnusedByIds(oldTagIds);
+      await this.removeUnusedTags(oldTagIds);
     }
 
     return this.findBySlug(slug, userId);
@@ -100,7 +101,18 @@ export class ArticlesService {
     const article = await this.findOwnArticle(slug, userId);
     const tagIds = article.tags.map((tag) => tag.id);
     await this.articlesRepository.deleteById(article.id);
-    await this.tagsRepository.deleteUnusedByIds(tagIds);
+    await this.removeUnusedTags(tagIds);
+  }
+
+  private async removeUnusedTags(tagIds: number[]): Promise<void> {
+    try {
+      await this.tagsRepository.deleteUnusedByIds(tagIds);
+    } catch (error: unknown) {
+      Logger.warn(
+        { message: 'Failed to remove unused tags', tagIds, error },
+        ArticlesService.name,
+      );
+    }
   }
 
   private async findArticle(slug: string): Promise<Article> {
