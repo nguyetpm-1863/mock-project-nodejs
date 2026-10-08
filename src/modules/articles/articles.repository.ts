@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { type DeepPartial, Repository } from 'typeorm';
+import { type DeepPartial, type EntityManager, Repository } from 'typeorm';
 import { Article } from './entities/article.entity.js';
 
 @Injectable()
@@ -10,8 +10,11 @@ export class ArticlesRepository {
     private readonly repository: Repository<Article>,
   ) {}
 
-  save(article: DeepPartial<Article>): Promise<Article> {
-    return this.repository.save(article);
+  save(
+    article: DeepPartial<Article>,
+    manager: EntityManager = this.repository.manager,
+  ): Promise<Article> {
+    return manager.getRepository(Article).save(article);
   }
 
   findBySlug(slug: string): Promise<Article | null> {
@@ -24,16 +27,20 @@ export class ArticlesRepository {
   async updateFields(
     id: number,
     fields: DeepPartial<Article>,
+    manager: EntityManager = this.repository.manager,
   ): Promise<boolean> {
-    const result = await this.repository.update(id, {
+    const result = await manager.getRepository(Article).update(id, {
       ...fields,
       updatedAt: new Date(),
     });
     return result.affected === 1;
   }
 
-  async deleteById(id: number): Promise<void> {
-    await this.repository.delete(id);
+  async deleteById(
+    id: number,
+    manager: EntityManager = this.repository.manager,
+  ): Promise<void> {
+    await manager.getRepository(Article).delete(id);
   }
 
   async countFavorites(articleId: number): Promise<number> {

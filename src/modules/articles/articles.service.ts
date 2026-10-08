@@ -1,10 +1,10 @@
 import {
   ForbiddenException,
   Injectable,
-  Logger,
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
+import { DataSource, type EntityManager } from 'typeorm';
 import { BLANK_MESSAGE } from '../../common/constants/error-messages.constants.js';
 import { apiErrors } from '../../common/errors/api-errors.js';
 import type { Tag } from '../tags/entities/tag.entity.js';
@@ -29,21 +29,29 @@ export class ArticlesService {
     private readonly articlesRepository: ArticlesRepository,
     private readonly tagsRepository: TagsRepository,
     private readonly followsRepository: FollowsRepository,
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(
     authorId: number,
     dto: CreateArticleFieldsDto,
   ): Promise<SingleArticleResponseDto> {
-    const article = await this.articlesRepository.save({
-      slug: generateSlug(dto.title),
-      title: dto.title,
-      description: dto.description,
-      body: dto.body,
-      author: { id: authorId },
-      tags: await this.findOrCreateTags(dto.tagList ?? []),
+    const slug = generateSlug(dto.title);
+    await this.dataSource.transaction(async (manager) => {
+      const tags = await this.findOrCreateTags(dto.tagList ?? [], manager);
+      await this.articlesRepository.save(
+        {
+          slug,
+          title: dto.title,
+          description: dto.description,
+          body: dto.body,
+          author: { id: authorId },
+          tags,
+        },
+        manager,
+      );
     });
-    return this.findBySlug(article.slug, authorId);
+    return this.findBySlug(slug, authorId);
   }
 
   async findBySlug(
@@ -77,21 +85,27 @@ export class ArticlesService {
       );
     }
 
-    const isUpdated = await this.articlesRepository.updateFields(
-      article.id,
-      changes,
-    );
+    const oldTagIds = article.tags.map((tag) => tag.id);
+    const isUpdated = await this.dataSource.transaction(async (manager) => {
+      const isRowUpdated = await this.articlesRepository.updateFields(
+        article.id,
+        changes,
+        manager,
+      );
+      if (isRowUpdated && dto.tagList !== undefined) {
+        await this.articlesRepository.save(
+          {
+            id: article.id,
+            tags: await this.findOrCreateTags(dto.tagList, manager),
+          },
+          manager,
+        );
+        await this.tagsRepository.deleteUnusedByIds(oldTagIds, manager);
+      }
+      return isRowUpdated;
+    });
     if (!isUpdated) {
       throw this.articleNotFound();
-    }
-
-    if (dto.tagList !== undefined) {
-      const oldTagIds = article.tags.map((tag) => tag.id);
-      await this.articlesRepository.save({
-        id: article.id,
-        tags: await this.findOrCreateTags(dto.tagList),
-      });
-      await this.removeUnusedTags(oldTagIds);
     }
 
     return this.findBySlug(slug, userId);
@@ -100,19 +114,11 @@ export class ArticlesService {
   async remove(slug: string, userId: number): Promise<void> {
     const article = await this.findOwnArticle(slug, userId);
     const tagIds = article.tags.map((tag) => tag.id);
-    await this.articlesRepository.deleteById(article.id);
-    await this.removeUnusedTags(tagIds);
-  }
 
-  private async removeUnusedTags(tagIds: number[]): Promise<void> {
-    try {
-      await this.tagsRepository.deleteUnusedByIds(tagIds);
-    } catch (error: unknown) {
-      Logger.warn(
-        { message: 'Failed to remove unused tags', tagIds, error },
-        ArticlesService.name,
-      );
-    }
+    await this.dataSource.transaction(async (manager) => {
+      await this.articlesRepository.deleteById(article.id, manager);
+      await this.tagsRepository.deleteUnusedByIds(tagIds, manager);
+    });
   }
 
   private async findArticle(slug: string): Promise<Article> {
@@ -139,12 +145,15 @@ export class ArticlesService {
     );
   }
 
-  private async findOrCreateTags(tagList: string[]): Promise<Tag[]> {
+  private async findOrCreateTags(
+    tagList: string[],
+    manager: EntityManager,
+  ): Promise<Tag[]> {
     const names = [...new Set(tagList)];
     if (names.length === 0) {
       return [];
     }
-    return this.tagsRepository.findOrCreateByNames(names);
+    return this.tagsRepository.findOrCreateByNames(names, manager);
   }
 
   private async toResponse(
@@ -152,22 +161,15 @@ export class ArticlesService {
     viewerId: number | null,
   ): Promise<SingleArticleResponseDto> {
     const author = article.author;
-    const favoritesCount = await this.articlesRepository.countFavorites(
-      article.id,
-    );
-
-    let isFavorited = false;
-    let isFollowing = false;
-    if (viewerId !== null) {
-      isFavorited = await this.articlesRepository.isFavoritedBy(
-        article.id,
-        viewerId,
-      );
-      isFollowing = await this.followsRepository.isFollowing(
-        viewerId,
-        author.id,
-      );
-    }
+    const [favoritesCount, isFavorited, isFollowing] = await Promise.all([
+      this.articlesRepository.countFavorites(article.id),
+      viewerId === null
+        ? false
+        : this.articlesRepository.isFavoritedBy(article.id, viewerId),
+      viewerId === null
+        ? false
+        : this.followsRepository.isFollowing(viewerId, author.id),
+    ]);
 
     return {
       article: {
