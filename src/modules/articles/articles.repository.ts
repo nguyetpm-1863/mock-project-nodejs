@@ -61,33 +61,42 @@ export class ArticlesRepository {
   }
 
   findPage(filters: ArticleFilters): Promise<[Article[], number]> {
-    return this.repository
+    const query = this.repository
       .createQueryBuilder('article')
       .leftJoinAndSelect('article.author', 'author')
-      .leftJoinAndSelect('article.tags', 'tag')
-      .where('(CAST(:author AS text) IS NULL OR author.username = :author)', {
-        author: filters.author ?? null,
-      })
-      .andWhere(
-        `(CAST(:tag AS text) IS NULL OR article.id IN (
+      .leftJoinAndSelect('article.tags', 'tag');
+
+    if (filters.author) {
+      query.andWhere('author.username = :author', { author: filters.author });
+    }
+    if (filters.tag) {
+      query.andWhere(
+        `article.id IN (
           SELECT at.article_id FROM article_tags at
           JOIN tags t ON t.id = at.tag_id
-          WHERE t.name = :tag))`,
-        { tag: filters.tag ?? null },
-      )
-      .andWhere(
-        `(CAST(:favorited AS text) IS NULL OR article.id IN (
+          WHERE t.name = :tag)`,
+        { tag: filters.tag },
+      );
+    }
+    if (filters.favorited) {
+      query.andWhere(
+        `article.id IN (
           SELECT af.article_id FROM article_favorites af
           JOIN users u ON u.id = af.user_id
-          WHERE u.username = :favorited))`,
-        { favorited: filters.favorited ?? null },
-      )
-      .andWhere(
-        `(CAST(:followerId AS integer) IS NULL OR author.id IN (
+          WHERE u.username = :favorited)`,
+        { favorited: filters.favorited },
+      );
+    }
+    if (filters.followedBy !== undefined) {
+      query.andWhere(
+        `author.id IN (
           SELECT uf.following_id FROM user_follows uf
-          WHERE uf.follower_id = :followerId))`,
-        { followerId: filters.followedBy ?? null },
-      )
+          WHERE uf.follower_id = :followerId)`,
+        { followerId: filters.followedBy },
+      );
+    }
+
+    return query
       .orderBy('article.createdAt', 'DESC')
       .addOrderBy('article.id', 'DESC')
       .skip(filters.offset)
