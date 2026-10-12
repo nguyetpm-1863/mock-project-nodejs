@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -26,6 +27,7 @@ export class Comment {
   @JoinColumn({ name: 'author_id' })
   author: Relation<User>;
 
+  @Index()
   @ManyToOne(() => Article, (article) => article.comments, {
     nullable: false,
     onDelete: 'CASCADE',
