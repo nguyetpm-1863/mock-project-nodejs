@@ -15,6 +15,7 @@ import { DatabaseModule } from './database/database.module.js';
 import { ArticlesModule } from './modules/articles/articles.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { CommentsModule } from './modules/comments/comments.module.js';
+import { FavoritesModule } from './modules/favorites/favorites.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { RedisModule } from './redis/redis.module.js';
 
@@ -39,6 +40,7 @@ import { RedisModule } from './redis/redis.module.js';
     AuthModule,
     ArticlesModule,
     CommentsModule,
+    FavoritesModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

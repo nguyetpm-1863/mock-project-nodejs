@@ -19,5 +19,6 @@ import { Article } from './entities/article.entity.js';
     TagsRepository,
     FollowsRepository,
   ],
+  exports: [ArticlesService],
 })
 export class ArticlesModule {}
