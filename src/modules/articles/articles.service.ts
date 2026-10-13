@@ -196,7 +196,7 @@ export class ArticlesService {
     };
   }
 
-  private async findArticle(slug: string): Promise<Article> {
+  async findArticle(slug: string): Promise<Article> {
     const article = await this.articlesRepository.findBySlug(slug);
     if (!article) {
       throw this.articleNotFound();
@@ -231,7 +231,7 @@ export class ArticlesService {
     return this.tagsRepository.findOrCreateByNames(names, manager);
   }
 
-  private async toResponse(
+  async toResponse(
     article: Article,
     viewerId: number | null,
   ): Promise<SingleArticleResponseDto> {
